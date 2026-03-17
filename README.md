@@ -20,7 +20,34 @@ Prototype d'un assistant conversationnel utilisant un LLM pour aider un utilisat
 - HTML / CSS
 - API LLM (Ollama)
 
+## Architecture
+
+Utilisateur
+↓
+Interface Web (HTML / JavaScript)
+↓
+Flask Backend
+↓
+API Ollama
+↓
+LLM (Llama3)
+
 ## Installation
+
+## Installation du modèle IA
+
+Ce projet utilise **Ollama** pour exécuter un modèle de langage local.
+
+### Installer Ollama
+
+https://ollama.com/
+
+``bash
+ollama pull llama3
+##verifier que le model fonctionne
+ollama run llama3
+
+### Télécharger le modèle
 
 ```bash
 git clone https://github.com/brachidios720/mini-assistant-ecommerce-ai
