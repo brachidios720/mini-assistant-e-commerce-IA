@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mini E-commerce IA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #f5f5f5;
+        }
+
+        h1, h2 {
+            color: #222;
+        }
+
+        .products {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .chat-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        textarea {
+            width: 98.5%;
+            height: 80px;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            resize: none;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        #response {
+            margin-top: 20px;
+            white-space: pre-wrap;
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mini site e-commerce industriel avec assistant IA</h1>
+
+    <h2>Recherche produit</h2>
+        <input type="text" id="searchInput" placeholder="Rechercher un produit...">
+        <button onclick="searchProducts()">Rechercher</button>
+    <h2>Produits</h2>
+    <div id="productList" class="products">
+        {% for product in products %}
+        <div class="card">
+            <h3>{{ product.name }}</h3>
+            <p>{{ product.description }}</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="chat-box">
+        <h2>Assistant IA</h2>
+        <p>Exemples : “Je cherche une bouteille plastique” ou “Quel produit pour automatiser une ligne ?”</p>
+
+        <div id="chatHistory" class="chat-history"></div>
+
+        <textarea id="message" placeholder="Pose ta question ici..."></textarea>
+        <br>
+        <button onclick="sendMessage()">Envoyer</button>
+        <button onclick="resetChat()">Nouvelle conversation</button>
+    </div>
+
+    <script>
+        async function searchProducts() {
+        const query = document.getElementById("searchInput").value;
+        const productList = document.getElementById("productList");
+
+        productList.innerHTML = "Chargement...";
+
+        try {
+            const response = await fetch("/search", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ query: query })
+            });
+
+            const data = await response.json();
+
+            if (data.results.length === 0) {
+                productList.innerHTML = "<p>Aucun produit trouvé.</p>";
+                return;
+            }
+
+            let html = "";
+
+            data.results.forEach(product => {
+                html += `
+                    <div class="card">
+                        <h3>${product.name}</h3>
+                        <p>${product.description}</p>
+                    </div>
+                `;
+            });
+
+            productList.innerHTML = html;
+
+        } catch (error) {
+            productList.innerHTML = "<p>Erreur lors de la recherche.</p>";
+            console.error(error);
+        }
+    }
+    async function sendMessage() {
+    const messageInput = document.getElementById("message");
+    const message = messageInput.value;
+    const chatHistory = document.getElementById("chatHistory");
+
+    if (!message.trim()) {
+        return;
+    }
+
+    chatHistory.innerHTML += `<p><strong>Vous :</strong> ${message}</p>`;
+    messageInput.value = "";
+
+    try {
+        const response = await fetch("/chat", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ message: message })
+        });
+
+        const data = await response.json();
+
+        chatHistory.innerHTML += `<p><strong>IA :</strong> ${data.answer}</p>`;
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+    } catch (error) {
+        chatHistory.innerHTML += `<p><strong>Erreur :</strong> ${error}</p>`;
+        console.error(error);
+    }
+    }
+    document.getElementById("searchInput").addEventListener("keypress", function(event) {
+    if (event.key === "Enter") {
+        searchProducts();
+    }
+    }); 
+    async function resetChat() {
+    document.getElementById("chatHistory").innerHTML = "";
+
+    await fetch("/reset_chat", {
+        method: "POST"
+    });
+    }
+    </script>
+</body>
+</html>
